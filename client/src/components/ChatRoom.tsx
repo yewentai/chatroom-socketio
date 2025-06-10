@@ -7,6 +7,7 @@ import UserList from './UserList';
 const ChatRoom: React.FC = () => {
     const [messages, setMessages] = useState<any[]>([]);
     const [users, setUsers] = useState<string[]>([]);
+    const [currentUsername, setCurrentUsername] = useState<string>('Anonymous'); // Add username state
     const socket = useSocket('http://localhost:3001');
 
     useEffect(() => {
@@ -20,9 +21,15 @@ const ChatRoom: React.FC = () => {
             setUsers(userList);
         });
 
+        // Listen for username confirmation or set it when connecting
+        socket.on('usernameSet', (username) => {
+            setCurrentUsername(username);
+        });
+
         return () => {
             socket.off('message');
             socket.off('userList');
+            socket.off('usernameSet');
         };
     }, [socket]);
 
@@ -33,10 +40,10 @@ const ChatRoom: React.FC = () => {
     return (
         <div className="flex flex-col h-screen">
             <div className="flex-1 overflow-auto">
-                <MessageList messages={messages} />
+                <MessageList messages={messages} currentUsername={currentUsername} />
             </div>
             <UserList users={users} />
-            <MessageInput onSend={handleSendMessage} />
+            <MessageInput onSendMessage={handleSendMessage} />
         </div>
     );
 };

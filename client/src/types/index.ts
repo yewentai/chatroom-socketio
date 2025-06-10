@@ -1,8 +1,9 @@
 export interface Message {
-    id: string;
-    userId: string;
+    _id?: string;
+    username: string;
     content: string;
     timestamp: Date;
+    room?: string;
 }
 
 export interface User {
@@ -12,6 +13,7 @@ export interface User {
 
 export interface ChatRoom {
     id: string;
+    name: string;
     messages: Message[];
     users: User[];
 }
