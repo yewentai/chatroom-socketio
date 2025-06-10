@@ -1,10 +1,10 @@
 # Chat Room MVP Project
 
-This project is a simple chat room application built using React and Tailwind CSS for the frontend, and Node.js, Express.js, and Socket.IO for the backend. 
+This project is a simple chat room application built using React and Tailwind CSS for the frontend, and Node.js, Express.js, and Socket.IO for the backend.
 
 ## Project Structure
 
-```
+```text
 chatroom-socketio
 ├── client
 │   ├── public
@@ -56,34 +56,34 @@ chatroom-socketio
 
 1. Clone the repository:
 
-   ```
+   ```bash
    git clone <repository-url>
    cd chatroom-socketio
    ```
 
 2. Navigate to the client directory and install dependencies:
 
-   ```
+   ```bash
    cd client
    npm install
    ```
 
    or
 
-   ```
+   ```bash
    yarn install
    ```
 
 3. Navigate to the server directory and install dependencies:
 
-   ```
+   ```bash
    cd ../server
    npm install
    ```
 
    or
 
-   ```
+   ```bash
    yarn install
    ```
 
@@ -91,14 +91,14 @@ chatroom-socketio
 
 1. Start the server:
 
-   ```
+   ```bash
    cd server
    npm start
    ```
 
 2. In a new terminal, start the client:
 
-   ```
+   ```bash
    cd client
    npm start
    ```

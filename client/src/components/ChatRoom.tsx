@@ -7,9 +7,11 @@ import UserList from './UserList';
 const ChatRoom: React.FC = () => {
     const [messages, setMessages] = useState<any[]>([]);
     const [users, setUsers] = useState<string[]>([]);
-    const socket = useSocket();
+    const socket = useSocket('http://localhost:3001');
 
     useEffect(() => {
+        if (!socket) return;
+
         socket.on('message', (message) => {
             setMessages((prevMessages) => [...prevMessages, message]);
         });
@@ -25,7 +27,7 @@ const ChatRoom: React.FC = () => {
     }, [socket]);
 
     const handleSendMessage = (message: string) => {
-        socket.emit('sendMessage', message);
+        socket?.emit('sendMessage', message);
     };
 
     return (
@@ -34,7 +36,7 @@ const ChatRoom: React.FC = () => {
                 <MessageList messages={messages} />
             </div>
             <UserList users={users} />
-            <MessageInput onSendMessage={handleSendMessage} />
+            <MessageInput onSend={handleSendMessage} />
         </div>
     );
 };
