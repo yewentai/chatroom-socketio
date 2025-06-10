@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
-import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:4000'); // Adjust the URL as needed
-
-const MessageInput: React.FC = () => {
+const MessageInput: React.FC<{ onSend: (message: string) => void }> = ({ onSend }) => {
     const [message, setMessage] = useState('');
 
-    const handleSendMessage = () => {
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
         if (message.trim()) {
-            socket.emit('sendMessage', message);
+            onSend(message);
             setMessage('');
         }
     };
 
     return (
-        <div className="flex items-center">
+        <form onSubmit={handleSubmit} className="flex">
             <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="border rounded p-2 flex-grow"
+                className="flex-grow p-2 border rounded"
             />
-            <button
-                onClick={handleSendMessage}
-                className="ml-2 bg-blue-500 text-white rounded p-2"
-            >
+            <button type="submit" className="ml-2 p-2 bg-blue-500 text-white rounded">
                 Send
             </button>
-        </div>
+        </form>
     );
 };
 

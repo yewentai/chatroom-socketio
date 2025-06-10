@@ -1,36 +1,48 @@
-# Chat Room MVP
+# Chat Room MVP Project
 
-This project is a simple chat room application built with React, Tailwind CSS, and Socket.IO for the frontend, and Node.js, Express.js, and Socket.IO for the backend.
-
-## Features
-
-- Real-time messaging using Socket.IO
-- Responsive design with Tailwind CSS
-- User-friendly interface for sending and receiving messages
+This project is a simple chat room application built using React and Tailwind CSS for the frontend, and Node.js, Express.js, and Socket.IO for the backend. 
 
 ## Project Structure
 
-``` sh
-chat-room-mvp
-├── client                # Frontend application
-│   ├── src               # Source files for React application
-│   │   ├── components     # React components
-│   │   ├── App.tsx        # Main application component
-│   │   ├── index.tsx      # Entry point for React application
-│   │   └── index.css      # Global CSS styles
-│   ├── public            # Public assets
-│   │   └── index.html     # Main HTML file
-│   ├── package.json      # Client-side npm project configuration
-│   ├── tailwind.config.js # Tailwind CSS configuration
-│   └── tsconfig.json     # TypeScript configuration for client
-├── server                # Backend application
-│   ├── src               # Source files for Node.js application
-│   │   ├── app.ts        # Entry point for server application
-│   │   ├── routes        # Route definitions
-│   │   └── socket        # Socket event handlers
-│   ├── package.json      # Server-side npm project configuration
-│   └── tsconfig.json     # TypeScript configuration for server
-└── README.md             # Project documentation
+```
+chatroom-socketio
+├── client
+│   ├── public
+│   │   └── index.html
+│   ├── src
+│   │   ├── components
+│   │   │   ├── ChatRoom.tsx
+│   │   │   ├── MessageList.tsx
+│   │   │   ├── MessageInput.tsx
+│   │   │   └── UserList.tsx
+│   │   ├── hooks
+│   │   │   └── useSocket.ts
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   ├── App.tsx
+│   │   └── index.tsx
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── tsconfig.json
+├── server
+│   ├── src
+│   │   ├── controllers
+│   │   │   └── chatController.ts
+│   │   ├── middleware
+│   │   │   └── auth.ts
+│   │   ├── models
+│   │   │   └── Message.ts
+│   │   ├── routes
+│   │   │   └── chat.ts
+│   │   ├── socket
+│   │   │   └── socketHandlers.ts
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   └── server.ts
+│   ├── package.json
+│   └── tsconfig.json
+├── .gitignore
+└── README.md
 ```
 
 ## Getting Started
@@ -38,54 +50,72 @@ chat-room-mvp
 ### Prerequisites
 
 - Node.js (version 14 or higher)
-- npm (Node Package Manager)
+- npm or yarn
 
 ### Installation
 
 1. Clone the repository:
 
-   ``` sh
-   git clone https://github.com/yourusername/chat-room-mvp.git
-   cd chat-room-mvp
+   ```
+   git clone <repository-url>
+   cd chatroom-socketio
    ```
 
-2. Install dependencies for the client:
+2. Navigate to the client directory and install dependencies:
 
-   ``` sh
+   ```
    cd client
    npm install
    ```
 
-3. Install dependencies for the server:
+   or
 
-   ``` sh
+   ```
+   yarn install
+   ```
+
+3. Navigate to the server directory and install dependencies:
+
+   ```
    cd ../server
    npm install
+   ```
+
+   or
+
+   ```
+   yarn install
    ```
 
 ### Running the Application
 
 1. Start the server:
 
-   ``` sh
+   ```
    cd server
    npm start
    ```
 
 2. In a new terminal, start the client:
 
-   ``` sh
+   ```
    cd client
    npm start
    ```
 
-3. Open your browser and navigate to `http://localhost:3000` to access the chat room.
+3. Open your browser and go to `http://localhost:3000` to access the chat room.
 
-## Usage
+### Features
 
-- Enter your message in the input field and press Enter to send.
-- Messages will be displayed in real-time for all connected users.
+- Real-time messaging using Socket.IO
+- User list display
+- Message input field
+- Responsive design with Tailwind CSS
 
-## License
+### Contributing
+
+Feel free to submit issues or pull requests for improvements or bug fixes.
+
+### License
 
 This project is licensed under the MIT License.
