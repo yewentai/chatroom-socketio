@@ -14,6 +14,7 @@ Project file structure for './':
 │   └── types
 │       └── index.js
 ├── package.json
+├── project_code_export.txt
 ├── src
 │   ├── controllers
 │   │   └── chatController.ts
@@ -89,195 +90,127 @@ Project file structure for './':
   ]
 }
 
-===== ./dist/server.js =====
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const http_1 = __importDefault(require("http"));
-const socket_io_1 = require("socket.io");
-const chat_1 = __importDefault(require("./routes/chat"));
-const socketHandlers_1 = require("./socket/socketHandlers");
-const app = (0, express_1.default)();
-const server = http_1.default.createServer(app);
-const io = new socket_io_1.Server(server);
-// Middleware
-app.use(express_1.default.json());
-app.use('/api/chat', chat_1.default);
-// Socket.IO setup
-(0, socketHandlers_1.setupSocketHandlers)(io);
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-
-===== ./dist/middleware/auth.js =====
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const authMiddleware = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
-    // Here you would typically verify the token and extract user information
-    // For example, using a library like jsonwebtoken:
-    // jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    //     if (err) {
-    //         return res.status(403).json({ message: 'Forbidden' });
-    //     }
-    //     req.user = user;
-    //     next();
-    // });
-    // For now, we'll just call next() to proceed
-    next();
-};
-exports.default = authMiddleware;
-
-
-===== ./dist/types/index.js =====
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-
-
-===== ./dist/models/Message.js =====
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Message = void 0;
-const mongoose_1 = require("mongoose");
-const messageSchema = new mongoose_1.Schema({
-    username: {
-        type: String,
-        required: true,
-    },
-    content: {
-        type: String,
-        required: true,
-    },
-    timestamp: {
-        type: Date,
-        default: Date.now,
-    },
-});
-exports.Message = (0, mongoose_1.model)('Message', messageSchema);
-
-
-===== ./dist/controllers/chatController.js =====
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMessage = exports.getMessages = void 0;
-const Message_1 = require("../models/Message");
-const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const messages = yield Message_1.Message.find().sort({ createdAt: -1 });
-        res.status(200).json(messages);
-    }
-    catch (error) {
-        res.status(500).json({ message: 'Error retrieving messages' });
-    }
-});
-exports.getMessages = getMessages;
-const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username, content } = req.body;
-    const newMessage = new Message_1.Message({
-        username,
-        content,
-        createdAt: new Date(),
-    });
-    try {
-        const savedMessage = yield newMessage.save();
-        res.status(201).json(savedMessage);
-    }
-    catch (error) {
-        res.status(500).json({ message: 'Error sending message' });
-    }
-});
-exports.sendMessage = sendMessage;
-
-
-===== ./dist/routes/chat.js =====
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const chatController_1 = require("../controllers/chatController");
-const router = (0, express_1.Router)();
-// Route to get chat messages
-router.get('/messages', chatController_1.getMessages);
-// Route to send a new chat message
-router.post('/messages', chatController_1.sendMessage);
-exports.default = router;
-
-
-===== ./dist/socket/socketHandlers.js =====
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupSocketHandlers = void 0;
-const Message_1 = require("../models/Message");
-const setupSocketHandlers = (io) => {
-    io.on("connection", (socket) => {
-        console.log("A user connected:", socket.id);
-        socket.on("joinRoom", (room) => {
-            socket.join(room);
-            console.log(`User ${socket.id} joined room: ${room}`);
-        });
-        socket.on("sendMessage", (messageData) => __awaiter(void 0, void 0, void 0, function* () {
-            const message = new Message_1.Message(messageData);
-            yield message.save();
-            io.to(messageData.room).emit("message", message);
-        }));
-        socket.on("disconnect", () => {
-            console.log("User disconnected:", socket.id);
-        });
-    });
-};
-exports.setupSocketHandlers = setupSocketHandlers;
-
-
 ===== ./src/server.ts =====
 import express from 'express';
 import http from 'http';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import { Server } from 'socket.io';
 import chatRoutes from './routes/chat';
 import { setupSocketHandlers } from './socket/socketHandlers';
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 // Middleware
+app.use(cors());
 app.use(express.json());
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Chat Server is running!', 
+    endpoints: {
+      messages: '/api/chat/messages',
+      websocket: 'Connect via Socket.IO'
+    }
+  });
+});
+
 app.use('/api/chat', chatRoutes);
+
+// MongoDB connection
+const connectDB = async () => {
+  try {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/chatroom';
+    await mongoose.connect(mongoUri);
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+};
 
 // Socket.IO setup
 setupSocketHandlers(io);
 
 const PORT = process.env.PORT || 5001;
 
-server.listen(PORT, () => {
+// Start server
+const startServer = async () => {
+  await connectDB();
+  server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`API endpoints available at http://localhost:${PORT}/api/chat`);
+  });
+};
+
+startServer();
+
+===== ./src/models/Message.ts =====
+import { Schema, model } from 'mongoose';
+
+const messageSchema = new Schema({
+  username: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
+export const Message = model('Message', messageSchema);
 
+===== ./src/routes/chat.ts =====
+import { Router } from 'express';
+import { getMessages, sendMessage } from '../controllers/chatController';
+
+const router = Router();
+
+// Route to get chat messages
+router.get('/messages', getMessages);
+
+// Route to send a new chat message
+router.post('/messages', sendMessage);
+
+export default router;
+
+===== ./src/types/index.ts =====
+// filepath: /chatroom-socketio/chatroom-socketio/server/src/types/index.ts
+export interface Message {
+    id: string;
+    userId: string;
+    content: string;
+    timestamp: Date;
+}
+
+export interface User {
+    id: string;
+    username: string;
+}
+
+export interface ChatRoom {
+    id: string;
+    name: string;
+    users: User[];
+    messages: Message[];
+}
 
 ===== ./src/middleware/auth.ts =====
 import { Request, Response, NextFunction } from 'express';
@@ -305,91 +238,6 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
 export default authMiddleware;
 
-===== ./src/types/index.ts =====
-// filepath: /chatroom-socketio/chatroom-socketio/server/src/types/index.ts
-export interface Message {
-    id: string;
-    userId: string;
-    content: string;
-    timestamp: Date;
-}
-
-export interface User {
-    id: string;
-    username: string;
-}
-
-export interface ChatRoom {
-    id: string;
-    name: string;
-    users: User[];
-    messages: Message[];
-}
-
-===== ./src/models/Message.ts =====
-import { Schema, model } from 'mongoose';
-
-const messageSchema = new Schema({
-  username: {
-    type: String,
-    required: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-export const Message = model('Message', messageSchema);
-
-===== ./src/controllers/chatController.ts =====
-import { Request, Response } from 'express';
-import { Message } from '../models/Message';
-
-export const getMessages = async (req: Request, res: Response) => {
-    try {
-        const messages = await Message.find().sort({ createdAt: -1 });
-        res.status(200).json(messages);
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving messages' });
-    }
-};
-
-export const sendMessage = async (req: Request, res: Response) => {
-    const { username, content } = req.body;
-
-    const newMessage = new Message({
-        username,
-        content,
-        createdAt: new Date(),
-    });
-
-    try {
-        const savedMessage = await newMessage.save();
-        res.status(201).json(savedMessage);
-    } catch (error) {
-        res.status(500).json({ message: 'Error sending message' });
-    }
-};
-
-===== ./src/routes/chat.ts =====
-import { Router } from 'express';
-import { getMessages, sendMessage } from '../controllers/chatController';
-
-const router = Router();
-
-// Route to get chat messages
-router.get('/messages', getMessages);
-
-// Route to send a new chat message
-router.post('/messages', sendMessage);
-
-export default router;
-
 ===== ./src/socket/socketHandlers.ts =====
 import { Server } from "socket.io";
 import { Message } from "../models/Message";
@@ -398,16 +246,41 @@ export const setupSocketHandlers = (io: Server) => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on("joinRoom", (room) => {
+    socket.on("joinRoom", (room: string) => {
       socket.join(room);
       console.log(`User ${socket.id} joined room: ${room}`);
+      
+      // Notify others in the room
+      socket.to(room).emit("userJoined", { 
+        message: `A user joined the room`,
+        room 
+      });
     });
 
     socket.on("sendMessage", async (messageData) => {
-      const message = new Message(messageData);
-      await message.save();
+      try {
+        console.log('Received message:', messageData);
+        
+        // Create message with or without room
+        const message = new Message({
+          username: messageData.username,
+          content: messageData.content,
+          timestamp: messageData.timestamp || new Date()
+        });
+        
+        const savedMessage = await message.save();
+        console.log('Message saved:', savedMessage);
 
-      io.to(messageData.room).emit("message", message);
+        // Emit to the specific room if provided, otherwise to all
+        if (messageData.room) {
+          io.to(messageData.room).emit("message", savedMessage);
+        } else {
+          io.emit("message", savedMessage);
+        }
+      } catch (error) {
+        console.error('Error saving message:', error);
+        socket.emit("error", { message: "Failed to save message" });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -415,4 +288,285 @@ export const setupSocketHandlers = (io: Server) => {
     });
   });
 };
+
+===== ./src/controllers/chatController.ts =====
+import { Request, Response } from 'express';
+import { Message } from '../models/Message';
+
+export const getMessages = async (req: Request, res: Response) => {
+    try {
+        // Sort by timestamp (which exists in the schema) instead of createdAt
+        const messages = await Message.find().sort({ timestamp: -1 }).limit(50);
+        res.status(200).json(messages);
+    } catch (error) {
+        console.error('Error retrieving messages:', error);
+        res.status(500).json({ message: 'Error retrieving messages' });
+    }
+};
+
+export const sendMessage = async (req: Request, res: Response) => {
+    const { username, content } = req.body;
+
+    // Validate input
+    if (!username || !content) {
+        return res.status(400).json({ message: 'Username and content are required' });
+    }
+
+    const newMessage = new Message({
+        username,
+        content,
+        // timestamp will be set automatically by the schema default
+    });
+
+    try {
+        const savedMessage = await newMessage.save();
+        res.status(201).json(savedMessage);
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ message: 'Error sending message' });
+    }
+};
+
+===== ./dist/server.js =====
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const http_1 = __importDefault(require("http"));
+const cors_1 = __importDefault(require("cors"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const socket_io_1 = require("socket.io");
+const chat_1 = __importDefault(require("./routes/chat"));
+const socketHandlers_1 = require("./socket/socketHandlers");
+// Load environment variables
+dotenv_1.default.config();
+const app = (0, express_1.default)();
+const server = http_1.default.createServer(app);
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
+// Middleware
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+// Routes
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Chat Server is running!',
+        endpoints: {
+            messages: '/api/chat/messages',
+            websocket: 'Connect via Socket.IO'
+        }
+    });
+});
+app.use('/api/chat', chat_1.default);
+// MongoDB connection
+const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/chatroom';
+        yield mongoose_1.default.connect(mongoUri);
+        console.log('Connected to MongoDB');
+    }
+    catch (error) {
+        console.error('MongoDB connection error:', error);
+        process.exit(1);
+    }
+});
+// Socket.IO setup
+(0, socketHandlers_1.setupSocketHandlers)(io);
+const PORT = process.env.PORT || 5001;
+// Start server
+const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
+    yield connectDB();
+    server.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`API endpoints available at http://localhost:${PORT}/api/chat`);
+    });
+});
+startServer();
+
+
+===== ./dist/models/Message.js =====
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Message = void 0;
+const mongoose_1 = require("mongoose");
+const messageSchema = new mongoose_1.Schema({
+    username: {
+        type: String,
+        required: true,
+    },
+    content: {
+        type: String,
+        required: true,
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now,
+    },
+});
+exports.Message = (0, mongoose_1.model)('Message', messageSchema);
+
+
+===== ./dist/routes/chat.js =====
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const chatController_1 = require("../controllers/chatController");
+const router = (0, express_1.Router)();
+// Route to get chat messages
+router.get('/messages', chatController_1.getMessages);
+// Route to send a new chat message
+router.post('/messages', chatController_1.sendMessage);
+exports.default = router;
+
+
+===== ./dist/types/index.js =====
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+
+
+===== ./dist/middleware/auth.js =====
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const authMiddleware = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    // Here you would typically verify the token and extract user information
+    // For example, using a library like jsonwebtoken:
+    // jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    //     if (err) {
+    //         return res.status(403).json({ message: 'Forbidden' });
+    //     }
+    //     req.user = user;
+    //     next();
+    // });
+    // For now, we'll just call next() to proceed
+    next();
+};
+exports.default = authMiddleware;
+
+
+===== ./dist/socket/socketHandlers.js =====
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setupSocketHandlers = void 0;
+const Message_1 = require("../models/Message");
+const setupSocketHandlers = (io) => {
+    io.on("connection", (socket) => {
+        console.log("A user connected:", socket.id);
+        socket.on("joinRoom", (room) => {
+            socket.join(room);
+            console.log(`User ${socket.id} joined room: ${room}`);
+            // Notify others in the room
+            socket.to(room).emit("userJoined", {
+                message: `A user joined the room`,
+                room
+            });
+        });
+        socket.on("sendMessage", (messageData) => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                console.log('Received message:', messageData);
+                // Create message with or without room
+                const message = new Message_1.Message({
+                    username: messageData.username,
+                    content: messageData.content,
+                    timestamp: messageData.timestamp || new Date()
+                });
+                const savedMessage = yield message.save();
+                console.log('Message saved:', savedMessage);
+                // Emit to the specific room if provided, otherwise to all
+                if (messageData.room) {
+                    io.to(messageData.room).emit("message", savedMessage);
+                }
+                else {
+                    io.emit("message", savedMessage);
+                }
+            }
+            catch (error) {
+                console.error('Error saving message:', error);
+                socket.emit("error", { message: "Failed to save message" });
+            }
+        }));
+        socket.on("disconnect", () => {
+            console.log("User disconnected:", socket.id);
+        });
+    });
+};
+exports.setupSocketHandlers = setupSocketHandlers;
+
+
+===== ./dist/controllers/chatController.js =====
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendMessage = exports.getMessages = void 0;
+const Message_1 = require("../models/Message");
+const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Sort by timestamp (which exists in the schema) instead of createdAt
+        const messages = yield Message_1.Message.find().sort({ timestamp: -1 }).limit(50);
+        res.status(200).json(messages);
+    }
+    catch (error) {
+        console.error('Error retrieving messages:', error);
+        res.status(500).json({ message: 'Error retrieving messages' });
+    }
+});
+exports.getMessages = getMessages;
+const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, content } = req.body;
+    // Validate input
+    if (!username || !content) {
+        return res.status(400).json({ message: 'Username and content are required' });
+    }
+    const newMessage = new Message_1.Message({
+        username,
+        content,
+        // timestamp will be set automatically by the schema default
+    });
+    try {
+        const savedMessage = yield newMessage.save();
+        res.status(201).json(savedMessage);
+    }
+    catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ message: 'Error sending message' });
+    }
+});
+exports.sendMessage = sendMessage;
+
 
